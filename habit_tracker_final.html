@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Habit Tracker Builder</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0a; color: #f0ede8; font-family: Arial, sans-serif; }
+input { font-family: Arial, sans-serif; }
+button { font-family: Arial, sans-serif; cursor: pointer; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* SIDEBAR */
+#sidebar { width: 280px; min-width: 280px; background: #111; border-right: 1px solid #222; display: flex; flex-direction: column; overflow: hidden; }
+#sidebar-header { background: #0f0f0f; padding: 14px 16px; border-bottom: 1px solid #222; }
+#sidebar-header .tag { font-size: 8px; font-weight: 700; color: #C8A96E; letter-spacing: 3px; margin-bottom: 4px; }
+#sidebar-header .title { font-size: 20px; font-weight: 900; letter-spacing: 2px; }
+#sidebar-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+#sidebar-footer { padding: 12px 14px; border-top: 1px solid #222; background: #0f0f0f; display: flex; flex-direction: column; gap: 8px; }
+
+.section-label { font-size: 8px; font-weight: 700; letter-spacing: 3px; color: #444; text-transform: uppercase; margin-bottom: 7px; }
+
+/* YEAR INPUT */
+#year-input { background: #161616; border: 1px solid #222; border-radius: 5px; color: #f0ede8; font-size: 18px; font-weight: 900; padding: 5px 10px; outline: none; width: 100px; }
+
+/* CAT CARDS */
+.cat-card { background: #161616; border: 1px solid #222; border-radius: 7px; overflow: visible; margin-bottom: 7px; }
+.cat-header { display: flex; align-items: center; gap: 7px; padding: 8px 10px; }
+.cat-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; flex-shrink: 0; position: relative; }
+.color-popup { position: absolute; top: 18px; left: 0; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 9px; display: flex; flex-wrap: wrap; gap: 5px; width: 132px; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,.95); }
+.color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+.color-swatch.sel { border-color: white; }
+.cat-name-input { flex: 1; background: transparent; border: none; color: #f0ede8; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; outline: none; }
+.cat-remove { background: none; border: none; color: #333; font-size: 15px; padding: 0 3px; line-height: 1; }
+.cat-toggle { color: #444; font-size: 11px; cursor: pointer; user-select: none; transition: transform .2s; }
+.cat-toggle.open { display: inline-block; transform: rotate(180deg); }
+.cat-body { padding: 0 10px 9px; display: flex; flex-direction: column; gap: 5px; }
+.habit-row { display: flex; gap: 5px; align-items: center; }
+.habit-input { flex: 1; background: #0d0d0d; border: 1px solid #222; border-radius: 4px; color: #f0ede8; font-size: 11px; padding: 5px 8px; outline: none; }
+.habit-input::placeholder { color: #333; }
+.habit-remove { background: none; border: 1px solid #222; border-radius: 4px; color: #444; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.add-habit-btn { background: none; border: 1px dashed #282828; border-radius: 4px; color: #444; font-size: 10px; padding: 5px; width: 100%; margin-top: 2px; }
+.add-cat-btn { background: none; border: 1px dashed #282828; border-radius: 7px; color: #444; font-size: 11px; padding: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.btn-secondary { background: #1a1a1a; border: 1px solid #333; border-radius: 7px; color: #f0ede8; font-size: 13px; font-weight: 700; padding: 10px; width: 100%; }
+.btn-primary { background: #C8A96E; color: #0a0a0a; border: none; border-radius: 7px; font-size: 15px; font-weight: 900; letter-spacing: 1px; padding: 12px; width: 100%; }
+.footer-stats { font-size: 9px; color: #444; text-align: center; line-height: 1.5; }
+
+/* MAIN AREA */
+#main { flex: 1; overflow-y: auto; padding: 20px 22px; background: #0a0a0a; }
+.main-label { font-size: 8px; font-weight: 700; letter-spacing: 3px; color: #444; text-transform: uppercase; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+.main-label span { font-size: 9px; color: #2a2a2a; font-weight: 400; letter-spacing: 0; }
+
+/* MONTH CARD */
+.month-card { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+.month-top-bar { height: 3px; background: #C8A96E; }
+.month-header { background: #111; padding: 10px 16px 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: flex-end; }
+.month-name { font-size: 26px; font-weight: 900; color: #f0ede8; letter-spacing: 2px; }
+.month-year { font-size: 26px; font-weight: 300; color: #444; margin-left: 8px; }
+.month-quote { font-size: 7px; color: #444; font-style: italic; text-align: right; line-height: 1.7; }
+.month-quote small { font-size: 6.5px; color: #333; }
+.grid-wrap { overflow-x: auto; }
+.habit-table { border-collapse: collapse; width: 100%; }
+.habit-table th { font-size: 7px; font-weight: 700; padding: 4px 0; border-bottom: 1px solid #252525; }
+.th-label { text-align: left; padding: 4px 12px !important; color: #444; background: #0f0f0f; min-width: 170px; width: 170px; }
+.th-day { text-align: center; width: 20px; min-width: 20px; }
+.cat-row td { padding: 3px 12px; border-bottom: 1px solid #1a1a1a; background: #0a0a0a; }
+.cat-badge { font-size: 7.5px; font-weight: 700; letter-spacing: 2px; padding: 1.5px 7px; border-radius: 3px; }
+.habit-name-cell { background: #0d0d0d; padding: 0; border-bottom: 1px solid #1a1a1a; min-width: 170px; width: 170px; }
+.habit-name-inner { display: flex; align-items: center; min-height: 22px; padding-left: 8px; }
+.habit-name-text { font-size: 8.5px; font-weight: 700; color: #f0ede8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 158px; }
+.day-cell { text-align: center; padding: 3px 2px; border-bottom: 1px solid #1a1a1a; width: 20px; }
+.checkbox { width: 10px; height: 10px; border: 1px solid #2e2e2e; background: #181818; border-radius: 2px; margin: auto; }
+.month-bottom { background: #0f0f0f; padding: 7px 16px; border-top: 1px solid rgba(200,169,110,0.33); display: flex; gap: 16px; align-items: flex-start; }
+.progress-section { flex: 1; }
+.progress-title { font-size: 7px; font-weight: 700; color: #C8A96E; letter-spacing: 2px; margin-bottom: 5px; }
+.weeks-row { display: flex; gap: 10px; }
+.week-item { }
+.week-label { font-size: 7px; color: #666; margin-bottom: 3px; }
+.week-bar { width: 80px; height: 3px; background: #1e1e1e; border-radius: 2px; margin-bottom: 3px; }
+.week-pct { font-size: 6.5px; color: #333; }
+.notes-section { flex: 1; border-left: 1px solid #222; padding-left: 14px; }
+.notes-title { font-size: 7px; font-weight: 700; color: #666; margin-bottom: 5px; }
+.note-line { border-bottom: 1px solid #222; margin-bottom: 7px; height: 9px; }
+.month-bottom-bar { height: 2px; background: #C8A96E; }
+
+/* PRINT VIEW */
+#print-bar { position: sticky; top: 0; z-index: 100; background: #111; border-bottom: 1px solid #222; padding: 10px 20px; display: flex; align-items: center; gap: 12px; }
+.btn-back { background: none; border: 1px solid #333; border-radius: 6px; color: #888; font-size: 12px; padding: 7px 14px; }
+.print-info { flex: 1; font-size: 10px; color: #555; }
+.btn-print { background: #C8A96E; color: #0a0a0a; border: none; border-radius: 6px; font-size: 14px; font-weight: 900; letter-spacing: 1px; padding: 9px 22px; }
+#print-months { padding: 14px; }
+
+@media print {
+  #print-bar { display: none !important; }
+  #sidebar { display: none !important; }
+  #main { display: none !important; }
+  #print-view { display: block !important; }
+  #print-months { padding: 0; }
+  .month-card { page-break-after: always; margin: 0 !important; border-radius: 0 !important; border: none !important; }
+  .month-card:last-child { page-break-after: auto; }
+  body { background: #0d0d0d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: A4 landscape; margin: 3mm; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div class="tag">PERSONALIZABLE</div>
+      <div class="title">HABIT TRACKER</div>
+    </div>
+    <div id="sidebar-body">
+      <div>
+        <div class="section-label">Año</div>
+        <input type="number" id="year-input" value="2026" min="2024" max="2035"/>
+      </div>
+      <div>
+        <div class="section-label">Categorías & Hábitos</div>
+        <div id="cats-container"></div>
+        <button class="add-cat-btn" onclick="addCat()">＋ Nueva categoría</button>
+      </div>
+    </div>
+    <div id="sidebar-footer">
+      <button class="btn-secondary" onclick="showPreview()">👁 VER TODOS LOS MESES</button>
+      <button class="btn-primary" onclick="doPrint()">🖨 IMPRIMIR / GUARDAR PDF</button>
+      <div class="footer-stats" id="footer-stats"></div>
+    </div>
+  </div>
+
+  <!-- EDITOR MAIN (January preview) -->
+  <div id="main">
+    <div class="main-label">
+      VISTA PREVIA — ENERO <span>El PDF imprime los 12 meses</span>
+    </div>
+    <div id="preview-container"></div>
+  </div>
+</div>
+
+<!-- PRINT VIEW (hidden until needed) -->
+<div id="print-view" style="display:none; background:#0a0a0a;">
+  <div id="print-bar">
+    <button class="btn-back" onclick="hidePreview()">← Editar</button>
+    <div class="print-info" id="print-info"></div>
+    <button class="btn-print" onclick="window.print()">🖨 IMPRIMIR / GUARDAR PDF</button>
+  </div>
+  <div id="print-months"></div>
+</div>
+
+<script>
+const COLORS = ["#C8A96E","#4A9EBF","#7EC87E","#C87EA0","#E8935A","#9B7EC8","#E8DF5A","#5AC8E8"];
+const MONTH_NAMES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+const MONTH_DAYS  = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+let uid = 7;
+let colorPopOpen = null;
+
+let cats = [
+  { id:1, name:"MENTALIDAD", color:"#C8A96E", open:true,  habits:["Meditación 10 min","Journaling diario","Lectura 20 min","Ducha fría","Sin quejarme hoy"] },
+  { id:2, name:"CUERPO",     color:"#4A9EBF", open:true,  habits:["Entrenamiento","8 horas de sueño","2 litros de agua","Sin azúcar / comida basura","Caminar 30 min"] },
+  { id:3, name:"ESTUDIOS",   color:"#7EC87E", open:true,  habits:["Estudiar 1 hora","Inglés 15 min","Aprender algo nuevo"] },
+  { id:4, name:"DISCIPLINA", color:"#E8935A", open:false, habits:["Sin redes sociales","Cel. apagado 10pm","Levantarme temprano","Cumplir metas del día"] },
+  { id:5, name:"FINANZAS",   color:"#9B7EC8", open:false, habits:["Registrar mis gastos","Ahorrar algo hoy","Sin compras impulsivas"] },
+  { id:6, name:"CARÁCTER",   color:"#C87EA0", open:false, habits:["Acto de generosidad","Hablar con familia","Mi hábito personal"] },
+];
+
+function getYear() { return parseInt(document.getElementById('year-input').value) || 2026; }
+
+function allHabits() {
+  return cats.flatMap(c => c.habits.filter(h=>h.trim()).map(h=>({name:h,color:c.color,catName:c.name,catColor:c.color})));
+}
+
+function addCat() {
+  cats.push({id:uid++,name:"NUEVA ÁREA",color:COLORS[cats.length%COLORS.length],open:true,habits:[""]});
+  render();
+}
+function removeCat(id) { cats=cats.filter(c=>c.id!==id); render(); }
+function toggleCat(id) { const c=cats.find(c=>c.id===id); if(c){c.open=!c.open; render();} }
+function setCatColor(id,col) { const c=cats.find(c=>c.id===id); if(c){c.color=col; colorPopOpen=null; render();} }
+function addHabit(id) { const c=cats.find(c=>c.id===id); if(c){c.habits.push(""); render();} }
+function removeHabit(id,i) { const c=cats.find(c=>c.id===id); if(c){c.habits.splice(i,1); render();} }
+
+function syncCatName(id,val) { const c=cats.find(c=>c.id===id); if(c)c.name=val.toUpperCase(); updatePreview(); updateStats(); }
+function syncHabit(id,i,val) { const c=cats.find(c=>c.id===id); if(c)c.habits[i]=val; updatePreview(); updateStats(); }
+
+document.getElementById('year-input').addEventListener('input', () => { updatePreview(); updateStats(); });
+
+function render() { renderSidebar(); updatePreview(); updateStats(); }
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const container = document.getElementById('cats-container');
+  container.innerHTML = '';
+  cats.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+
+    const swatches = COLORS.map(c=>`
+      <div class="color-swatch${cat.color===c?' sel':''}" style="background:${c}"
+        onclick="setCatColor(${cat.id},'${c}')"></div>`).join('');
+
+    const habitRows = cat.habits.map((h,i)=>`
+      <div class="habit-row">
+        <input class="habit-input" type="text" value="${esc(h)}" placeholder="Nombre del hábito..."
+          oninput="syncHabit(${cat.id},${i},this.value)"/>
+        <button class="habit-remove" onclick="removeHabit(${cat.id},${i})">×</button>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${cat.color}" onclick="toggleColorPop(${cat.id})">
+          ${colorPopOpen===cat.id ? `<div class="color-popup" onclick="event.stopPropagation()">${swatches}</div>` : ''}
+        </div>
+        <input class="cat-name-input" type="text" value="${esc(cat.name)}"
+          oninput="syncCatName(${cat.id},this.value)"/>
+        <button class="cat-remove" onclick="removeCat(${cat.id})">×</button>
+        <span class="cat-toggle${cat.open?' open':''}" onclick="toggleCat(${cat.id})">▾</span>
+      </div>
+      ${cat.open ? `<div class="cat-body">${habitRows}
+        <button class="add-habit-btn" onclick="addHabit(${cat.id})">+ Agregar hábito</button>
+      </div>` : ''}`;
+    container.appendChild(card);
+  });
+}
+
+function toggleColorPop(id) {
+  event.stopPropagation();
+  colorPopOpen = colorPopOpen===id ? null : id;
+  renderSidebar();
+}
+
+document.addEventListener('click', () => { if(colorPopOpen){colorPopOpen=null;renderSidebar();} });
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── MONTH HTML ────────────────────────────────────────────────────────────────
+function buildMonthHTML(monthName, days, year, habits) {
+  const CELL = 20;
+  const dayHeaders = Array.from({length:days},(_,i)=>{
+    const isWe=i%7===5||i%7===6;
+    return `<th class="th-day" style="color:${isWe?'#C8A96E':'#555'};background:${isWe?'#1c1508':'#0f0f0f'}">${i+1}</th>`;
+  }).join('');
+
+  let lastCat=null; let ri=0;
+  const rows = habits.map((h,hi)=>{
+    let out='';
+    if(h.catName!==lastCat){
+      lastCat=h.catName;
+      out+=`<tr class="cat-row"><td colspan="${days+1}">
+        <span class="cat-badge" style="color:${h.catColor};background:${h.catColor}1a">${h.catName}</span>
+      </td></tr>`;
+    }
+    const bg=ri%2===0?'#111':'#0e0e0e'; ri++;
+    const boxes=Array.from({length:days},(_,di)=>{
+      const isWe=di%7===5||di%7===6;
+      return `<td class="day-cell" style="background:${isWe?'#131008':bg}"><div class="checkbox"></div></td>`;
+    }).join('');
+    out+=`<tr style="border-left:3px solid ${h.color}">
+      <td class="habit-name-cell"><div class="habit-name-inner"><span class="habit-name-text">${esc(h.name)}</span></div></td>
+      ${boxes}</tr>`;
+    return out;
+  }).join('');
+
+  return `<div class="month-card">
+    <div class="month-top-bar"></div>
+    <div class="month-header">
+      <div>
+        <div style="font-size:8px;font-weight:700;color:#C8A96E;letter-spacing:3px;margin-bottom:3px">HABIT TRACKER ${year}</div>
+        <span class="month-name">${monthName}</span><span class="month-year">${year}</span>
+      </div>
+      <div class="month-quote">"Disciplina es elegir entre lo que quieres ahora y lo que quieres más."<br><small>— Abraham Lincoln</small></div>
+    </div>
+    <div class="grid-wrap">
+      <table class="habit-table" style="min-width:${170+days*CELL}px">
+        <thead><tr style="background:#0f0f0f">
+          <th class="th-label">HÁBITO</th>${dayHeaders}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="month-bottom">
+      <div class="progress-section">
+        <div class="progress-title">PROGRESO SEMANAL</div>
+        <div class="weeks-row">
+          ${["Semana 1","Semana 2","Semana 3","Semana 4"].map(w=>`
+            <div class="week-item">
+              <div class="week-label">${w}</div>
+              <div class="week-bar"></div>
+              <div class="week-pct">____ % completado</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="notes-section">
+        <div class="notes-title">NOTAS DEL MES:</div>
+        <div class="note-line"></div><div class="note-line"></div><div class="note-line"></div>
+      </div>
+    </div>
+    <div class="month-bottom-bar"></div>
+  </div>`;
+}
+
+// ── PREVIEW ───────────────────────────────────────────────────────────────────
+function updatePreview() {
+  const h = allHabits();
+  const year = getYear();
+  const el = document.getElementById('preview-container');
+  if(!h.length){ el.innerHTML='<div style="text-align:center;padding:60px;color:#333;font-size:13px">Agrega hábitos en el panel izquierdo ✦</div>'; return; }
+  el.innerHTML = buildMonthHTML('ENERO', 31, year, h);
+}
+
+function updateStats() {
+  const h = allHabits();
+  const year = getYear();
+  document.getElementById('footer-stats').textContent = `${h.length} hábitos · ${year} · 12 meses`;
+}
+
+// ── PRINT / PREVIEW ───────────────────────────────────────────────────────────
+function showPreview() {
+  const h = allHabits();
+  const year = getYear();
+  if(!h.length){ alert('Agrega al menos un hábito primero.'); return; }
+
+  const months = document.getElementById('print-months');
+  months.innerHTML = MONTH_NAMES.map((mName,mi)=>{
+    const days = mi===1?(year%4===0?29:28):MONTH_DAYS[mi];
+    return buildMonthHTML(mName, days, year, h);
+  }).join('');
+
+  document.getElementById('print-info').textContent = `${h.length} hábitos · ${year} · 12 páginas`;
+  document.getElementById('app').style.display='none';
+  document.getElementById('print-view').style.display='block';
+}
+
+function hidePreview() {
+  document.getElementById('app').style.display='flex';
+  document.getElementById('print-view').style.display='none';
+}
+
+function doPrint() {
+  showPreview();
+  setTimeout(()=>window.print(), 400);
+}
+
+// INIT
+renderSidebar();
+updatePreview();
+updateStats();
+</script>
+</body>
+</html>
